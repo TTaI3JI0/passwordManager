@@ -28,3 +28,6 @@ select = ["E", "F", "I", "N", "UP",
 [tool.mypy]
 strict = true
 python_version = "3.14"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

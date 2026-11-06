@@ -10,12 +10,12 @@ def main() -> None:
     manager = PasswordManager("passwords.json")
 
     if manager.is_initialized():
-        if manager.unlock(getpass.getpass("Введите мастер-пароль", echo_char="*")):
+        if manager.unlock(getpass.getpass("Введите мастер-пароль: ", echo_char="*")):
             print("Успешный вход!")
         else:
             print("Неверный мастер-пароль!")
     else:
-        manager.init_master(getpass.getpass("Придумайте мастер-пароль", echo_char="*"))
+        manager.init_master(getpass.getpass("Придумайте мастер-пароль: ", echo_char="*"))
 
 
 if __name__ == "__main__":
