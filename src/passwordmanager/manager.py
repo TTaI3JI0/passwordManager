@@ -17,8 +17,10 @@ class PasswordManager:
 
     def init_master(self, master_password: str) -> None:
         """Создаёт уникальный json-файл с паролями и записывает в него мастер-пароль."""
-        with open(self.path, "x") as file:
-            json.dump({"masterPassword": master_password}, file, indent=4)
+        data = {"masterPassword": master_password, "entries": {}}
+
+        with open(self.path, "x", encoding="utf-8") as file:
+            json.dump(data, file, indent=4)
 
     def unlock(self, password: str) -> bool:
         """Проверяет мастер-пароль."""
@@ -33,24 +35,37 @@ class PasswordManager:
 
     def add_entry(self, name: str, login: str, pwd: str) -> None:
         """Добавляет новый пароль в хранилище."""
-        pass
+        data = self._load()
+        data["entries"][name] = {"login": login, "pwd": pwd}  # type: ignore
+        self._persist(data)
 
     def list_entries(self) -> list[str]:
-        """Вовзращает список ресурсов, для которые сохранен логи и пароль."""
-        return []
+        """Возвращает список ресурсов, для которых сохранен логин и пароль."""
+        data = self._load()
+        return list(data["entries"].keys())  # type: ignore
 
     def get_entry(self, name: str) -> str:
         """Возвращает логин и пароль от ресурса по имени."""
-        return ""
+        data = self._load()
+        entries = data["entries"]
+        if name in entries:  # type: ignore
+            entry = entries[name]  # type: ignore
+            return f"Логин: {entry['login']}, Пароль: {entry['pwd']}"
+        return "Запись не найдена."
 
     def delete_entry(self, name: str) -> None:
         """Удаляет пароль из хранилища по названию ресурса."""
-        pass
+        data = self._load()
+        if name in data["entries"]:  # type: ignore
+            del data["entries"][name]  # type: ignore
+            self._persist(data)
 
-    def _persist(self) -> None:
+    def _persist(self, data: dict[str, object]) -> None:
         """Сохраняет файл с паролями."""
-        pass
+        with open(self.path, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=4)
 
-    def _load(self) -> dict[str, str]:
+    def _load(self) -> dict[str, object]:
         """Загружает файл с паролями."""
-        return {}
+        with open(self.path, encoding="utf-8") as file:
+            return json.load(file)  # type: ignore
