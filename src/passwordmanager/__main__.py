@@ -15,7 +15,8 @@ def main() -> None:
         else:
             print("Неверный мастер-пароль!")
     else:
-        manager.init_master(getpass.getpass("Придумайте мастер-пароль: ", echo_char="*"))
+        manager.init_master(getpass.getpass("Придумайте мастер-пароль: ",
+                                            echo_char="*"))
 
 
 if __name__ == "__main__":
