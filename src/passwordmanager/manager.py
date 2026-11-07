@@ -5,6 +5,7 @@ import hashlib
 import json
 import pathlib
 import secrets
+import string
 
 from cryptography.fernet import Fernet
 
@@ -89,6 +90,11 @@ class PasswordManager:
         if name in data["entries"]:  # type: ignore
             del data["entries"][name]  # type: ignore
             self._persist(data)
+
+    def generate_password(self) -> str:
+        """Генерирует случайный пароль."""
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+        return "".join(secrets.choice(alphabet) for _ in range(16))
 
     def _persist(self, data: dict[str, object]) -> None:
         """Сохраняет файл с паролями."""
