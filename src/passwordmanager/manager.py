@@ -1,7 +1,12 @@
 """Модуль управления паролями."""
 
+import base64
+import hashlib
 import json
 import pathlib
+import secrets
+
+from cryptography.fernet import Fernet
 
 
 class PasswordManager:
@@ -10,6 +15,7 @@ class PasswordManager:
     def __init__(self, file_path: str) -> None:
         """Инициализирует менеджер и получает путь к файлу с паролями."""
         self.path = pathlib.Path(file_path)
+        self.key: bytes | None = None
 
     def is_initialized(self) -> bool:
         """Проверка наличия файла методом из модуля pathlib."""
@@ -17,7 +23,12 @@ class PasswordManager:
 
     def init_master(self, master_password: str) -> None:
         """Создаёт уникальный json-файл с паролями и записывает в него мастер-пароль."""
-        data = {"masterPassword": master_password, "entries": {}}
+        salt = secrets.token_bytes(16)
+        pwd_hash = hashlib.pbkdf2_hmac(
+            "sha256", master_password.encode(), salt, 200_000
+        ).hex()
+
+        data = {"masterHash": pwd_hash, "salt": salt.hex(), "entries": {}}
 
         with open(self.path, "x", encoding="utf-8") as file:
             json.dump(data, file, indent=4)
@@ -30,13 +41,27 @@ class PasswordManager:
         with open(self.path, encoding="utf-8") as file:
             data = json.load(file)
 
-        saved_password = data["masterPassword"]
-        return bool(saved_password == password)
+        salt = bytes.fromhex(data["salt"])
+        actual_hash = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, 200_000
+        ).hex()
+
+        if actual_hash != data["masterHash"]:
+            return False
+
+        self.key = base64.urlsafe_b64encode(bytes.fromhex(actual_hash))
+        return True
 
     def add_entry(self, name: str, login: str, pwd: str) -> None:
         """Добавляет новый пароль в хранилище."""
+        if self.key is None:
+            raise ValueError("Сначала нужно войти (unlock)")
+
         data = self._load()
-        data["entries"][name] = {"login": login, "pwd": pwd}  # type: ignore
+        fernet = Fernet(self.key)
+        encrypted_pwd = fernet.encrypt(pwd.encode()).decode()
+
+        data["entries"][name] = {"login": login, "pwd": encrypted_pwd}  # type: ignore
         self._persist(data)
 
     def list_entries(self) -> list[str]:
@@ -46,11 +71,16 @@ class PasswordManager:
 
     def get_entry(self, name: str) -> str:
         """Возвращает логин и пароль от ресурса по имени."""
+        if self.key is None:
+            raise ValueError("Сначала нужно войти (unlock)")
+
         data = self._load()
         entries = data["entries"]
         if name in entries:  # type: ignore
             entry = entries[name]  # type: ignore
-            return f"Логин: {entry['login']}, Пароль: {entry['pwd']}"
+            fernet = Fernet(self.key)
+            decrypted_pwd = fernet.decrypt(entry["pwd"].encode()).decode()
+            return f"Логин: {entry['login']}, Пароль: {decrypted_pwd}"
         return "Запись не найдена."
 
     def delete_entry(self, name: str) -> None:

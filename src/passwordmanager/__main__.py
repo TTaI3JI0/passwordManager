@@ -11,8 +11,9 @@ def main() -> None:
 
     while True:
         if manager.is_initialized():
-            if manager.unlock(getpass.getpass("Введите мастер-пароль: ",
-                                              echo_char="*")):
+            if manager.unlock(
+                getpass.getpass("Введите мастер-пароль: ", echo_char="*")
+            ):
                 print("Успешный вход!")
                 break
             else:
@@ -40,7 +41,7 @@ def main() -> None:
             print(f"Запись для {name} добавлена!")
 
         elif choice == "2":
-            print("Список ресурсов, для которых сохранён пароль:")
+            print("\nСписок ресурсов, для которых сохранён пароль:")
             entries = manager.list_entries()
             for entry in entries:
                 print(f"- {entry}")
