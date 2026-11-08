@@ -27,3 +27,23 @@
 ## Предупреждения
 1. Фича первая - восстановить мастер-пароль нельзя, если забудете, то доступ к данным не вернуть!
 3. Фича вторая - если записать пароль на уже существующий ресурс, то пароль просто перезапишется.
+
+## Структура проекта:
+passwordManager/
+├── .github/
+│   └── workflows/
+│       └── ci.yml               # CI/CD: запуск ruff, mypy и pytest на GitHub
+├── src/
+│   └── passwordmanager/
+│       ├── __init__.py          # Файл-маркер пакета (пустой)
+│       ├── __main__.py          # Точка входа, CLI-меню, getpass, input
+│       └── manager.py           # Класс PasswordManager (логика, шифрование Fernet, хэширование)
+├── tests/
+│   ├── __init__.py              # Файл-маркер для тестов (обязателен для pytest)
+│   └── test_manager.py          # Тесты: unlock, add/get, delete, generate_password
+├── .gitignore                   # Исключения (passwords.json, .venv, .idea и т.д.)
+├── .python-version              # Указание версии Python (3.14)
+├── pyproject.toml               # Зависимости + настройки ruff, mypy, pytest
+├── uv.lock                      # Зафиксированные версии библиотек
+├── README.md                    # Описание проекта, инструкции по запуску
+└── passwords.json               # (Генерируется при запуске, не попадает в Git)
